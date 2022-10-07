@@ -10,32 +10,28 @@ const A = "A"
 const C = "C"
 const T = "T"
 const G = "G"
-const DIVIDER int32 = 4
+const DIVIDER int = 4
 
 func SteadyGene(gene string) int {
 	fmt.Println("This Algorithms resolve the problem \"Bear And Steady Gene\"")
-	lenOfGen := int32(len(gene))
+	lenOfGen := len(gene)
 	lenOfGenSteady := lenOfGen / DIVIDER
 	initialStatusGen := getGenCount(gene)
-
-	// This is the min substring
 	minSubstring, gensToInclude := getMinSubstring(initialStatusGen, lenOfGenSteady)
 	return getMinimunWithRoteSolution(int(minSubstring), gene, gensToInclude)
 }
 
-func getGenCount(gen string) map[string]int32 {
-	result := make(map[string]int32)
-	result[A] = int32(strings.Count(gen, A))
-	result[C] = int32(strings.Count(gen, C))
-	result[G] = int32(strings.Count(gen, G))
-	result[T] = int32(strings.Count(gen, T))
-
+func getGenCount(gen string) map[string]int {
+	result := make(map[string]int)
+	for _, val := range gen {
+		result[string(val)]++
+	}
 	return result
 }
 
-func getMinSubstring(value map[string]int32, steadyValue int32) (int32, map[string]int32) {
-	var result int32
-	var gens = make(map[string]int32)
+func getMinSubstring(value map[string]int, steadyValue int) (int, map[string]int) {
+	var result int
+	var gens = make(map[string]int)
 
 	if (steadyValue - value[A]) < 0 {
 		gens[A] = value[A] - steadyValue
@@ -59,11 +55,9 @@ func getMinSubstring(value map[string]int32, steadyValue int32) (int32, map[stri
 	return result, gens
 }
 
-func isValidSubString(substring string, substringToCheckOut map[string]int32) bool {
-	var gensInclude = getGenCount(substring)
-
+func isValidSubString(substring string, substringToCheckOut map[string]int) bool {
 	for key, val := range substringToCheckOut {
-		if gensInclude[key] != val {
+		if strings.Count(substring, key) != int(val) {
 			return false
 		}
 	}
@@ -75,33 +69,31 @@ func trimFirstRune(s string) string {
 	return s[i:]
 }
 
-func getMinimunWithRoteSolution(minSubstring int, gene string, gensToInclude map[string]int32) int {
+func getMinimunWithRoteSolution(minSubstring int, gene string, gensToInclude map[string]int) int {
 	if minSubstring > len(gene) {
 		return 0
 	}
-	found := false
-	var counter int
+	finalize := false
 	internalMinSubstring := minSubstring
 	internalGene := gene
-	for !found {
+
+	for !finalize {
 		var subGene = internalGene[0:internalMinSubstring]
 		if isValidSubString(subGene, gensToInclude) {
-			found = true
 			return internalMinSubstring
 		} else {
-			fistGen := internalGene[0]
-			internalGene = trimFirstRune(internalGene) + string(fistGen)
-			counter++
+			internalGene = trimFirstRune(internalGene)
 		}
 
-		if counter == len(internalGene) {
-			counter = 0
+		if len(internalGene) < internalMinSubstring {
 			internalMinSubstring++
-		}
-
-		if internalMinSubstring == len(internalGene) {
-			found = true
+			if internalMinSubstring > len(gene) {
+				finalize = true
+			} else {
+				internalGene = gene
+			}
 		}
 	}
+
 	return 0
 }
