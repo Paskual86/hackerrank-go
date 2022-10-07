@@ -11,7 +11,7 @@ const T = "T"
 const G = "G"
 const DIVIDER int32 = 4
 
-func SteadyGene(gene string) int32 {
+func SteadyGene(gene string) int {
 	fmt.Println("This Algorithms resolve the problem \"Bear And Steady Gene\"")
 	lenOfGen := int32(len(gene))
 	lenOfGenSteady := lenOfGen / DIVIDER
@@ -19,9 +19,25 @@ func SteadyGene(gene string) int32 {
 
 	// This is the min substring
 	minSubstring, gensToInclude := getMinSubstring(initialStatusGen, lenOfGenSteady)
-
+	var iteration = prepareArray(gene, int(minSubstring))
 	//fmt.Printf("Len of Gen: %d. Len of Gen Steady: %d. Gene Original: %s. Gene Final: %s. MaxIndex:%d, MinIndex:%d MinSubString: %d \n", lenOfGen, lenOfGenSteady, gene, genFinal, maxIndex, minIndex, minLenSubString)
-	return getMinSubStringRecursive(minSubstring, gene, gensToInclude)
+	return getMinSubString(int(minSubstring), gene, iteration, gensToInclude)
+	//getMinSubStringRecursive(minSubstring, gene, gensToInclude)
+}
+
+func prepareArray(gen string, lengthSubstring int) map[int]string {
+	var completed bool = false
+	var index int
+	result := make(map[int]string)
+	for !completed {
+		if lengthSubstring+index > len(gen) {
+			completed = true
+		} else {
+			result[index] = gen[index : lengthSubstring+index]
+		}
+		index++
+	}
+	return result
 }
 
 func getGenCount(gen string) map[string]int32 {
@@ -74,22 +90,67 @@ func isValidSubString(substring string, substringToCheckOut map[string]int32) bo
 		(tExists && gensInclude[T] == tValue)
 }
 
+func getMinSubString(minSubstring int, gene string, geneSplitted map[int]string, gensToInclude map[string]int32) int {
+
+	if minSubstring > len(gene) {
+		return 0
+	}
+	var geneSplitcopy = geneSplitted
+	var completed bool = false
+	var index int
+	var internalMinSubstring = minSubstring
+
+	for !completed {
+		if index >= len(geneSplitcopy) {
+			index = 0
+			internalMinSubstring++
+		} else {
+			if isValidSubString(geneSplitcopy[index], gensToInclude) {
+				completed = true
+				return internalMinSubstring
+			} else {
+				if index+1+len(geneSplitcopy[index]) < len(gene) {
+					geneSplitcopy[index] = gene[index : internalMinSubstring+index+1]
+				} else {
+					delete(geneSplitcopy, index)
+				}
+			}
+		}
+
+		if internalMinSubstring >= len(gene) || len(geneSplitcopy) == 0 {
+			completed = true
+		}
+
+		index++
+	}
+	return 0
+}
+
 func getMinSubStringRecursive(minSubstring int32, gene string, gensToInclude map[string]int32) int32 {
 
 	if minSubstring > int32(len(gene)) {
 		return 0
 	}
-
-	for index, _ := range gene {
-		if (int32(index) + minSubstring) >= int32(len(gene)) {
-			break
+	var found = false
+	index := 0
+	internalMinSubstring := minSubstring
+	for !found {
+		if (int32(index) + internalMinSubstring) >= int32(len(gene)) {
+			internalMinSubstring++
+			index = 0
 		} else {
-			var subGene = gene[index : minSubstring+int32(index)]
+			var subGene = gene[index : internalMinSubstring+int32(index)]
 			if isValidSubString(subGene, gensToInclude) {
-				return minSubstring
+				found = true
+				return internalMinSubstring
 			}
+		}
+		index++
+		if internalMinSubstring >= int32(len(gene)) {
+			found = true
+			internalMinSubstring = 0
 		}
 	}
 
-	return getMinSubStringRecursive(minSubstring+1, gene, gensToInclude)
+	return internalMinSubstring
 }

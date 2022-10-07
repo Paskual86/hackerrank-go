@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	//
-	fmt.Printf("Min Substring: %d \n", algorithms.SteadyGene("GAAATAAA"))
+	// TGATGCCGTCCCCTCAACTTGAGTGCTCCTAATGCGTTGC
+	fmt.Printf("Min Substring: %d \n", algorithms.SteadyGene("TGATGCCGTCCCCTCAACTTGAGTGCTCCTAATGCGTTGC")) //GAAATAAA
 }
