@@ -3,6 +3,7 @@ package algorithms
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 const A = "A"
@@ -19,25 +20,7 @@ func SteadyGene(gene string) int {
 
 	// This is the min substring
 	minSubstring, gensToInclude := getMinSubstring(initialStatusGen, lenOfGenSteady)
-	var iteration = prepareArray(gene, int(minSubstring))
-	//fmt.Printf("Len of Gen: %d. Len of Gen Steady: %d. Gene Original: %s. Gene Final: %s. MaxIndex:%d, MinIndex:%d MinSubString: %d \n", lenOfGen, lenOfGenSteady, gene, genFinal, maxIndex, minIndex, minLenSubString)
-	return getMinSubString(int(minSubstring), gene, iteration, gensToInclude)
-	//getMinSubStringRecursive(minSubstring, gene, gensToInclude)
-}
-
-func prepareArray(gen string, lengthSubstring int) map[int]string {
-	var completed bool = false
-	var index int
-	result := make(map[int]string)
-	for !completed {
-		if lengthSubstring+index > len(gen) {
-			completed = true
-		} else {
-			result[index] = gen[index : lengthSubstring+index]
-		}
-		index++
-	}
-	return result
+	return getMinimunWithRoteSolution(int(minSubstring), gene, gensToInclude)
 }
 
 func getGenCount(gen string) map[string]int32 {
@@ -79,78 +62,46 @@ func getMinSubstring(value map[string]int32, steadyValue int32) (int32, map[stri
 func isValidSubString(substring string, substringToCheckOut map[string]int32) bool {
 	var gensInclude = getGenCount(substring)
 
-	aValue, aExists := substringToCheckOut[A]
-	cValue, cExists := substringToCheckOut[C]
-	gValue, gExists := substringToCheckOut[G]
-	tValue, tExists := substringToCheckOut[T]
-
-	return (aExists && gensInclude[A] == aValue) ||
-		(cExists && gensInclude[C] == cValue) ||
-		(gExists && gensInclude[G] == gValue) ||
-		(tExists && gensInclude[T] == tValue)
+	for key, val := range substringToCheckOut {
+		if gensInclude[key] != val {
+			return false
+		}
+	}
+	return true
 }
 
-func getMinSubString(minSubstring int, gene string, geneSplitted map[int]string, gensToInclude map[string]int32) int {
+func trimFirstRune(s string) string {
+	_, i := utf8.DecodeRuneInString(s)
+	return s[i:]
+}
 
+func getMinimunWithRoteSolution(minSubstring int, gene string, gensToInclude map[string]int32) int {
 	if minSubstring > len(gene) {
 		return 0
 	}
-	var geneSplitcopy = geneSplitted
-	var completed bool = false
-	var index int
-	var internalMinSubstring = minSubstring
-
-	for !completed {
-		if index >= len(geneSplitcopy) {
-			index = 0
-			internalMinSubstring++
+	found := false
+	var counter int
+	internalMinSubstring := minSubstring
+	internalGene := gene
+	for !found {
+		var subGene = internalGene[0:internalMinSubstring]
+		if isValidSubString(subGene, gensToInclude) {
+			found = true
+			return internalMinSubstring
 		} else {
-			if isValidSubString(geneSplitcopy[index], gensToInclude) {
-				completed = true
-				return internalMinSubstring
-			} else {
-				if index+1+len(geneSplitcopy[index]) < len(gene) {
-					geneSplitcopy[index] = gene[index : internalMinSubstring+index+1]
-				} else {
-					delete(geneSplitcopy, index)
-				}
-			}
+			fistGen := internalGene[0]
+			internalGene = trimFirstRune(internalGene) + string(fistGen)
+			counter++
 		}
 
-		if internalMinSubstring >= len(gene) || len(geneSplitcopy) == 0 {
-			completed = true
+		if counter == len(internalGene) {
+			counter = 0
+			internalMinSubstring++
 		}
 
-		index++
+		if internalMinSubstring == len(internalGene) {
+			found = true
+		}
 	}
 	return 0
-}
-
-func getMinSubStringRecursive(minSubstring int32, gene string, gensToInclude map[string]int32) int32 {
-
-	if minSubstring > int32(len(gene)) {
-		return 0
-	}
-	var found = false
-	index := 0
-	internalMinSubstring := minSubstring
-	for !found {
-		if (int32(index) + internalMinSubstring) >= int32(len(gene)) {
-			internalMinSubstring++
-			index = 0
-		} else {
-			var subGene = gene[index : internalMinSubstring+int32(index)]
-			if isValidSubString(subGene, gensToInclude) {
-				found = true
-				return internalMinSubstring
-			}
-		}
-		index++
-		if internalMinSubstring >= int32(len(gene)) {
-			found = true
-			internalMinSubstring = 0
-		}
-	}
-
-	return internalMinSubstring
 }
